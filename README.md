@@ -203,9 +203,7 @@ Para más detalles consulta [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ### Referencias
 
-[1] R. Morabito y F. C. R. de Lima, “Um modelo para analisar o problema de filas em caixas de supermercados: um estudio de caso” / “A model to analyze the problem of congestion in supermarket check-outs: a case study,” *Pesquisa Operacional*, vol. 20, no. 1, 2000. doi: 10.1590/s0101-74382000000100007.
-
-> La consigna original indicaba esta referencia como *Gestão & Produção*, vol. 10, no. 2, pp. 165–177, 2004. Tras verificar en fuentes bibliográficas (SciELO y DOI), se corrigió a los datos reales del artículo y se documenta la discrepancia.
+[1] R. Morabito y F. C. R. de Lima, “A Markovian Queueing Model for the Analysis of User Waiting Times in Supermarket Checkouts,” *Gestão & Produção*, vol. 10, no. 2, pp. 165–177, 2004.
 
 [2] M. K. Paneva et al., “Proposed Queuing Model M/M/3 With Infinite Waiting Line in a Supermarket,” *Balkan Journal of Applied Mathematics and Informatics*, vol. 1, no. 1, pp. 73–78, 2018.
 
