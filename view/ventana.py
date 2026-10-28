@@ -22,7 +22,9 @@ CAMPOS = [
 ]
 COLUMNAS = ('Escenario', 'Filas', 'c', 'λ', 'μ', 'Corridas', 'rho sim.', 'rho teo.',
             'L sim.', 'L teo.', 'Lq sim.', 'Lq teo.', 'W sim.', 'W teo.',
-            'Wq sim.', 'Wq teo.', 'Δ Wq', 'Llegados', 'Atendidos T', 'Pendientes T', 'Cola máxima')
+            'Wq sim.', 'Wq n', 'Wq DE', 'Wq IC95 inferior', 'Wq IC95 superior',
+            'Wq semiancho', 'Wq precisión relativa', 'T (min)', 'Calentamiento (min)',
+            'Wq teo.', 'Δ Wq', 'Llegados', 'Atendidos T', 'Pendientes T', 'Cola máxima')
 
 
 class VentanaPrincipal:
@@ -205,7 +207,8 @@ class VentanaPrincipal:
         self._texto(panel, 'RESULTADOS TEÓRICOS Y SIMULADOS', self.c['azul'], 12, True,
                     bg=self.c['fondo']).pack(anchor='w', pady=(0, 5))
         self._texto(panel, 'N/A = no corresponde teoría M/M/c o sistema sin estado estable. '
-                    'Los promedios proceden de las repeticiones indicadas.',
+                    'DE e IC95 se calculan entre réplicas válidas; con menos de 2 no se estiman. '
+                    'Los gráficos de detalle y la animación muestran la primera réplica.',
                     self.c['suave'], 9, bg=self.c['fondo']).pack(anchor='w', pady=(0, 14))
         contenedor = tk.Frame(panel, bg=self.c['panel'])
         contenedor.pack(fill='both', expand=True)

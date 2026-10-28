@@ -106,14 +106,8 @@ class ControladorSimulacion:
                     self.ultimo = elegidos[0] if elegidos else datos[-1]
                     self.vista.mostrar_resultado(self.ultimo, cambiar=False)
                     recomendacion = None
-                    if accion == 'cajas':
-                        llegada, servicio = parametros[0]['llegadas'], parametros[0]['servicio']
-                        max_cajas, objetivo = parametros[2], parametros[3]
-                        elegido, wq = TeoriaMMc().recomendar(llegada, servicio, max_cajas, objetivo)
-                        recomendacion = (f'✓ Recomendación TEÓRICA para fila única: {elegido} caja(s) '
-                                         f'(Wq={wq:.3f} min ≤ {objetivo:g} min).'
-                                         if elegido else
-                                         f'No existe una opción estable con Wq ≤ {objetivo:g} min en 1–{max_cajas} cajas.')
+                    if accion in ('cajas', 'filas'):
+                        recomendacion = self.comparador.texto_recomendacion(datos, parametros[3])
                     self._actualizar_tabla(datos, recomendacion)
                 self.vista.botones['exportar'].configure(state='normal')
         except Empty:
