@@ -19,3 +19,14 @@ class Exportador:
         pd.DataFrame(eventos).to_csv(carpeta / 'eventos_clientes.csv', index=False, encoding='utf-8-sig')
         filas = ComparadorMMc.filas_tabla(comparaciones or [resultado])
         pd.DataFrame(filas).to_csv(carpeta / 'comparacion_escenarios.csv', index=False, encoding='utf-8-sig')
+        replicas = []
+        for item in comparaciones or [resultado]:
+            for numero, corrida in enumerate(item.get('replicas', [item]), start=1):
+                simulacion = corrida['simulacion']
+                fila = {k: v for k, v in simulacion.items() if k not in (
+                    'clientes', 'eventos', 'historial', 'esperas_clientes', 'utilizacion_cajas')}
+                fila.update(escenario=item['nombre'], replica=numero,
+                            calentamiento_min=simulacion['duracion'] * simulacion['calentamiento'],
+                            utilizacion_cajas=json.dumps(simulacion['utilizacion_cajas']))
+                replicas.append(fila)
+        pd.DataFrame(replicas).to_csv(carpeta / 'resultados_replicas.csv', index=False, encoding='utf-8-sig')
