@@ -142,7 +142,20 @@ Simulador_Supermercado_MMc/
 
 **SOLID y Clean Code:** clases con funciones concretas, componentes desacoplados y sin capas abstractas decorativas; el código mantiene pocos comentarios para facilitar su defensa.
 
-## 6. Leer las gráficas
+## 6. Colaborar en el proyecto
+
+El equipo trabaja con un flujo Git sencillo basado en `main`, `develop` y ramas personales.
+
+- `main` contiene la versión revisada para entregar.
+- `develop` es la rama de integración donde se prueban los avances del equipo.
+- Cada integrante trabaja en una rama propia (`feature/<nombre>-<issue>-<descripción>`) y abre un **Pull Request hacia `develop`**.
+- Cuando los cambios están revisados y probados, se prepara un PR de `develop` hacia `main`.
+
+Para más detalles —cómo iniciar una tarea, actualizarse desde `develop`, abrir un PR, revisar cambios y cerrar issues— consulta [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+> **Nota:** `main` es la rama predeterminada del repositorio. Por eso los mensajes `Closes #N` en un PR hacia `develop` no cierran automáticamente el issue. El cierre manual se documenta una vez el trabajo se valida e integra a `main`.
+
+## 7. Leer las gráficas
 
 - **Evolución de cola:** eje horizontal tiempo (min), vertical clientes esperando. Cada salto proviene de un cambio en SimPy.
 - **Esperas individuales:** cada punto corresponde a un cliente real, eje vertical minutos de espera.
@@ -153,7 +166,7 @@ Simulador_Supermercado_MMc/
 
 Al hacer clic sobre la evolución, el reproductor salta al último evento de ese instante. Al pulsar cerca de un cliente de la gráfica de espera, intenta localizar su inicio de atención.
 
-## 7. Ejecutar pruebas
+## 8. Ejecutar pruebas
 
 Desde la raíz del proyecto, con el entorno activado y `requirements.txt` instalado:
 
@@ -165,7 +178,7 @@ Prueban ecuaciones M/M/1 como caso c = 1, relaciones de Little, estado inestable
 
 **Validación de esta entrega:** consulta `docs/VALIDACION.md` para distinguir pruebas efectivamente ejecutadas y pruebas pendientes con SimPy oficial.
 
-## 8. Alcance y limitaciones
+## 9. Alcance y limitaciones
 
 - La fila independiente usa una regla fija de menor carga (espera + servicio) y un desempate por número de caja; no hay abandono, cambios de fila, cajas rápidas ni variación horaria.
 - Son tiempos Poisson/exponenciales con parámetros constantes; si hubiera observaciones reales, antes habría que evaluar estos supuestos.
@@ -174,9 +187,11 @@ Prueban ecuaciones M/M/1 como caso c = 1, relaciones de Little, estado inestable
 - La recomendación de mínimo c satisface un criterio teórico de estabilidad y Wq en el rango seleccionado; no considera costos laborales.
 - El entorno virtual debe instalarse en el equipo del usuario; **no se distribuye** en el ZIP.
 
-## 9. Referencias suministradas (IEEE)
+## 10. Referencias suministradas (IEEE)
 
-[1] R. Morabito y F. C. R. de Lima, “A Markovian Queueing Model for the Analysis of User Waiting Times in Supermarket Checkouts,” *Gestão & Produção*, vol. 10, no. 2, pp. 165–177, 2004.
+[1] R. Morabito y F. C. R. de Lima, “Um modelo para analisar o problema de filas em caixas de supermercados: um estudo de caso” / “A model to analyze the problem of congestion in supermarket check-outs: a case study,” *Pesquisa Operacional*, vol. 20, no. 1, 2000. doi: 10.1590/s0101-74382000000100007.
+
+> **Discrepancia con la consigna:** el README original indicaba esta referencia como *Gestão & Produção*, vol. 10, no. 2, pp. 165–177, 2004. La búsqueda bibliográfica verificable (SciELO, DOI y catálogo de la revista) ubica el trabajo de Morabito y Lima sobre supermercados en *Pesquisa Operacional*, vol. 20, no. 1, 2000. No se encontró evidencia de una publicación con el título y datos originales en *Gestão & Produção* 2004; por eso se corrige manteniendo el año 2000 indicado por las fuentes consultadas y se documenta la diferencia.
 
 [2] M. K. Paneva et al., “Proposed Queuing Model M/M/3 With Infinite Waiting Line in a Supermarket,” *Balkan Journal of Applied Mathematics and Informatics*, vol. 1, no. 1, pp. 73–78, 2018.
 
