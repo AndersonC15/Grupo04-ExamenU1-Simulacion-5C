@@ -32,6 +32,7 @@ El proyecto está construido con **Python** y las siguientes bibliotecas:
 | [Python](https://www.python.org/) | Lenguaje principal del proyecto. |
 | [SimPy](https://simpy.readthedocs.io/) | Simulación de eventos discretos (llegadas, colas y atención). |
 | [NumPy](https://numpy.org/) | Generación de números aleatorios y cálculos numéricos. |
+| [SciPy](https://scipy.org/) | Cuantiles t de Student para intervalos de confianza entre réplicas. |
 | [Pandas](https://pandas.pydata.org/) | Exportación de resultados a CSV. |
 | [Matplotlib](https://matplotlib.org/) | Gráficas de evolución de colas, esperas y utilización. |
 | [Tkinter](https://docs.python.org/3/library/tkinter.html) | Interfaz gráfica de escritorio. |
@@ -141,7 +142,23 @@ python main.py
 python -m unittest discover -s tests -v
 ```
 
-El proyecto incluye 15 pruebas que verifican fórmulas teóricas, conservación de clientes, FIFO, reproducibilidad, comparaciones y exportación.
+El proyecto incluye pruebas de fórmulas teóricas, conservación de clientes, FIFO,
+reproducibilidad, entradas comunes entre alternativas, estadística de réplicas,
+recomendación, integración con el controlador y exportación.
+
+### Réplicas y recomendación
+
+La tabla comparativa muestra media, desviación muestral, IC aproximado del 95 %,
+número de réplicas válidas y precisión de Wq. Con una sola réplica no se estima IC.
+La duración y el calentamiento también quedan registrados.
+La recomendación selecciona el menor Wq medio simulado entre las configuraciones
+evaluadas con observaciones y carga lambda < c * mu. La meta de espera se informa
+por separado. La selección por media no demuestra superioridad estadística.
+
+La exportación agrega `resultados_replicas.csv` con parámetros, semillas y métricas
+por réplica. La animación y los gráficos de detalle conservan la primera réplica;
+los gráficos comparativos muestran los promedios.
+Consulta [el diseño estadístico y los pendientes de integración](docs/COMPARACION_REPLICAS.md).
 
 ---
 
