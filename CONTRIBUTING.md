@@ -10,8 +10,6 @@ Este documento explica cómo trabajamos en equipo en el simulador de cajas de su
 | `develop` | Integración de los avances del equipo. Aquí se prueban los cambios antes de pasar a `main`. |
 | `feature/<nombre>-<issue>-<descripción>` | Rama personal de cada integrante para una tarea concreta. |
 
-Ejemplo de nombre de rama: `feature/domenica-12-simplificar-interfaz`.
-
 ## Antes de empezar
 
 1. Clona o actualiza el repositorio.
