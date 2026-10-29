@@ -4,6 +4,7 @@ import simpy
 
 
 class FilaUnica:
+    """FIFO compartido atendido por cualquier caja libre."""
     nombre = 'Fila única'
 
     def __init__(self, entorno, cajas):
@@ -18,11 +19,13 @@ class FilaUnica:
         return self.recursos[0].request()
 
     def comenzar(self, numero, fila, ocupados):
-        assert self.filas[0].popleft() == numero, 'FIFO compartido incorrecto'
+        if self.filas[0].popleft() != numero:
+            raise RuntimeError('FIFO compartido incorrecto')
         return ocupados.index(None)
 
 
 class FilasMultiples:
+    """Menor carga (espera + servicio), empate por índice y sin cambio de fila."""
     nombre = 'Filas múltiples'
 
     def __init__(self, entorno, cajas):
@@ -39,8 +42,10 @@ class FilasMultiples:
         return self.recursos[fila].request()
 
     def comenzar(self, numero, fila, ocupados):
-        assert self.filas[fila].popleft() == numero, 'FIFO individual incorrecto'
-        assert ocupados[fila] is None, 'La caja no está libre'
+        if self.filas[fila].popleft() != numero:
+            raise RuntimeError('FIFO individual incorrecto')
+        if ocupados[fila] is not None:
+            raise RuntimeError('La caja no está libre')
         return fila
 
 

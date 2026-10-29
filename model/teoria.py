@@ -5,16 +5,8 @@ import math
 class TeoriaMMc:
     @staticmethod
     def validar(llegadas, servicio, cajas, duracion=None):
-        for nombre, valor in [('λ', llegadas), ('μ', servicio)]:
-            if isinstance(valor, bool) or not isinstance(valor, (int, float)) or not math.isfinite(valor) or valor <= 0:
-                raise ValueError(f'La tasa {nombre} debe ser un número positivo y finito.')
-        if isinstance(cajas, bool) or not isinstance(cajas, int) or not 1 <= cajas <= 20:
-            raise ValueError('El número de cajas debe ser un entero entre 1 y 20.')
-        if duracion is not None:
-            if isinstance(duracion, bool) or not isinstance(duracion, (int, float)) or not math.isfinite(duracion) or duracion <= 0:
-                raise ValueError('La duración debe ser positiva y finita.')
-            if duracion * llegadas > 100000:
-                raise ValueError('Demasiadas llegadas esperadas. Reduce λ o la duración (máximo 100 000).')
+        from model.validador import validar_base
+        validar_base(llegadas, servicio, cajas, duracion)
 
     def calcular(self, llegadas, servicio, cajas):
         self.validar(llegadas, servicio, cajas)
@@ -36,6 +28,8 @@ class TeoriaMMc:
         lq = p_espera * rho / (1 - rho)
         wq = lq / llegadas
         w = wq + 1 / servicio
+        if not all(math.isfinite(x) for x in (p0, p_espera, lq, wq, w, llegadas * w)):
+            raise ValueError('La escala numérica excede la precisión disponible. Revisa las tasas.')
         return {'estable': True, 'rho': rho, 'P0': p0, 'p_espera': p_espera,
                 'L': llegadas * w, 'Lq': lq, 'W': w, 'Wq': wq}
 

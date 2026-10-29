@@ -37,6 +37,11 @@ class PruebasComparacion(unittest.TestCase):
                 self.assertTrue((ruta / archivo).is_file())
                 self.assertGreater((ruta / archivo).stat().st_size, 20)
 
+    def test_entradas_invalidas_se_rechazan_antes_de_presupuestar(self):
+        for campo,valor in [('llegadas','abc'),('servicio',0),('cajas',True),('semilla',False)]:
+            with self.subTest(campo=campo), self.assertRaises(ValueError):
+                self.comparador.comparar_filas({**self.parametros,campo:valor},3)
+
 
 if __name__ == '__main__':
     unittest.main()

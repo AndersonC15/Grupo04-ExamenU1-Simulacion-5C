@@ -1,8 +1,8 @@
 """Comparación de cajas y estrategias bajo entradas aleatorias comunes."""
-import math
-import numpy as np
 from model.simulador import SimuladorMMc
 from model.teoria import TeoriaMMc
+from model.estadistica import resumir
+from model.validador import numero, validar_carga
 
 ESCENARIOS = {
     'Moderado (3 cajas)': (1.2, 0.8, 3),
@@ -17,38 +17,68 @@ class ComparadorMMc:
         self.simulador = SimuladorMMc()
         self.teoria = TeoriaMMc()
 
-    def ejecutar(self, params):
-        s = self.simulador.simular(**params)
+    def ejecutar(self, params, detalle=True, cancelar=None, progreso=None):
+        s = self.simulador.simular(**params, registrar_detalle=detalle,
+                                   cancelar=cancelar, progreso=progreso)
         t = self.teoria.calcular(s['lambda'], s['mu'], s['c']) if s['organizacion'] == 'unica' else None
         return {'nombre': 'Simulación individual', 'simulacion': s, 'teoria': t}
 
-    def _medir(self, params, repeticiones, nombre):
-        corridas = []
+    def _medir(self, params, repeticiones, nombre, cancelar=None, progreso=None):
+        params = {'semilla':42, **params}
+        valores = {m: [] for m in (*METRICAS, 'llegados', 'atendidos', 'pendientes', 'max_cola')}
+        primera = None
         for i in range(repeticiones):
-            parametros = dict(params)
-            parametros['semilla'] += i
-            corridas.append(self.ejecutar(parametros))
-        primera = corridas[0]
-        resumen = {}
-        for metrica in METRICAS:
-            valores = [x['simulacion'][metrica] for x in corridas if x['simulacion'][metrica] is not None]
-            resumen[metrica] = float(np.mean(valores)) if valores else None
-        for metrica in ('llegados', 'atendidos', 'pendientes', 'max_cola'):
-            resumen[metrica] = float(np.mean([x['simulacion'][metrica] for x in corridas]))
+            corrida = self.ejecutar({**params, 'semilla': params['semilla'] + i},
+                                    detalle=False, cancelar=cancelar)
+            if primera is None:
+                primera = corrida
+            for metrica in valores:
+                valores[metrica].append(corrida['simulacion'][metrica])
+            if progreso:
+                progreso(i + 1)
+        estadisticas = {m: resumir(v) for m, v in valores.items()}
         return {'nombre': nombre, 'simulacion': primera['simulacion'], 'teoria': primera['teoria'],
-                'promedio': resumen, 'repeticiones': repeticiones}
+                'promedio': {m: e['media'] for m, e in estadisticas.items()},
+                'estadisticas': estadisticas, 'repeticiones': repeticiones,
+                'parametros': dict(params), 'semillas': [params['semilla'] + i for i in range(repeticiones)]}
 
-    def comparar_filas(self, params, repeticiones):
-        return [self._medir({**params, 'organizacion': tipo}, repeticiones, titulo)
-                for tipo, titulo in [('unica', 'Fila única'), ('multiples', 'Filas múltiples')]]
+    @staticmethod
+    def _carga(params, repeticiones, max_cajas, accion):
+        TeoriaMMc.validar(params['llegadas'],params['servicio'],params['cajas'],params['duracion'])
+        numero('semilla',params.get('semilla',42))
+        numero('repeticiones', repeticiones)
+        numero('max_cajas', max_cajas)
+        validar_carga({'lambda': params['llegadas'], 'duracion': params['duracion'],
+                       'c': params['cajas'], 'repeticiones': repeticiones,
+                       'max_cajas': max_cajas}, accion)
 
-    def comparar_cajas(self, params, max_cajas, repeticiones):
-        if not isinstance(max_cajas, int) or not 1 <= max_cajas <= 20:
-            raise ValueError('El máximo de cajas debe estar entre 1 y 20.')
-        return [self._medir({**params, 'cajas': c, 'organizacion': tipo}, repeticiones,
-                            f'{c} cajas · {titulo}')
-                for c in range(1, max_cajas + 1)
-                for tipo, titulo in [('unica', 'Fila única'), ('multiples', 'Filas múltiples')]]
+    def comparar_filas(self, params, repeticiones, cancelar=None, progreso=None):
+        self._carga(params, repeticiones, params['cajas'], 'filas')
+        salida = []
+        for tipo, titulo in [('unica', 'Fila única'), ('multiples', 'Filas múltiples')]:
+            indice = len(salida)
+            informar = (lambda n, base=indice: progreso((base * repeticiones + n) / (2 * repeticiones))) if progreso else None
+            salida.append(self._medir({**params, 'organizacion': tipo}, repeticiones, titulo, cancelar, informar))
+        return salida
+
+    def comparar_cajas(self, params, max_cajas, repeticiones, cancelar=None, progreso=None):
+        self._carga(params, repeticiones, max_cajas, 'cajas')
+        salida = []
+        for c in range(1, max_cajas + 1):
+            for tipo, titulo in [('unica', 'Fila única'), ('multiples', 'Filas múltiples')]:
+                indice = len(salida)
+                informar = (lambda n, base=indice: progreso((base * repeticiones + n) / (2 * max_cajas * repeticiones))) if progreso else None
+                salida.append(self._medir({**params, 'cajas': c, 'organizacion': tipo}, repeticiones,
+                                          f'{c} cajas · {titulo}', cancelar, informar))
+        return salida
+
+    def reconstruir(self, escenario, indice=0, cancelar=None):
+        if not 0 <= indice < escenario['repeticiones']:
+            raise ValueError('Selecciona una réplica existente.')
+        params = {**escenario['parametros'], 'semilla': escenario['semillas'][indice]}
+        salida = self.ejecutar(params, cancelar=cancelar)
+        salida['nombre'] = f"{escenario['nombre']} · réplica {indice+1} · semilla {params['semilla']}"
+        return salida
 
     @staticmethod
     def filas_tabla(datos):

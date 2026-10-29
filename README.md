@@ -1,25 +1,56 @@
-# Simulador de cajas de supermercado M/M/c
+# Simulador de Cajas de Supermercado — Modelo M/M/c
 
-Proyecto académico de **Simulación — Ingeniería en Ciencias de la Computación, quinto ciclo (UNL)**.
+**Proyecto académico de Simulación — Ingeniería en Ciencias de la Computación, quinto ciclo (UNL)**
 
-Inspirado en la actividad *«Análisis y optimización del tiempo de espera en cajas de supermercado mediante la simulación del modelo estocástico de colas M/M/c»* y en la arquitectura MVC, interfaz Tkinter y reproductor de eventos del proyecto previo `APE03_MM1_Cola_y_Graficas_Dinamicas.zip`.
+Simulación de colas M/M/c aplicada al proceso de pago en cajas de supermercado, con comparación de configuraciones y análisis de tiempos de espera.
 
-## 1. ¿Qué hace?
+---
 
-- Simula llegadas de clientes mediante un proceso de Poisson (intervalos exponenciales) y servicios exponenciales por caja usando **SimPy**.
-- Compara **fila única FIFO** con varias cajas y **filas FIFO independientes** (se elige al llegar la fila de menor carga y no se cambia).
-- Compara configuraciones con distinto **c** y muestra teoría de estado estable **solo en fila única**.
-- Calcula ρ, L, Lq, W, Wq, P0, porcentaje que esperó, clientes llegados, atendidos y pendientes, máxima cola y ocupación por caja.
-- Reproduce eventos reales de clientes en Canvas Tkinter y permite Inicio, Paso, Reproducir, Pausar, velocidad y deslizador.
-- Muestra gráficas integradas Matplotlib y tablas con desplazamiento horizontal.
-- Ejecuta varias repeticiones con distintas semillas y exporta CSV y PNG.
-- Recomienda **el menor número de cajas evaluado** que cumple estabilidad teórica y el máximo Wq configurado (sin afirmar que sea óptimo económico).
+## 1. Descripción del proyecto
 
-**Aclaración:** la recomendación es una comparación teórica bajo supuestos M/M/c, no una optimización de costos. Tampoco son datos de un supermercado real: los parámetros iniciales son ejemplos didácticos.
+Este simulador modela el proceso de pago en las cajas de un supermercado usando la teoría de colas **M/M/c**. Su propósito es comparar distintas configuraciones de cajas y organización de filas para identificar la opción que **minimiza el tiempo promedio de espera de los clientes**.
 
-## 2. Requisitos
+### ¿Qué problema resuelve?
 
-Python **3.10 o superior**, Tkinter, entorno virtual y las bibliotecas indicadas en `requirements.txt` (SimPy, NumPy, Pandas y Matplotlib). Se necesita escritorio gráfico para abrir la ventana.
+En un supermercado, los clientes llegan de forma aleatoria y deben esperar para pagar. Abrir demasiadas cajas aumenta costos; abrir muy pocas genera largas filas. El simulador permite:
+
+- Comparar **fila única FIFO** contra **filas independientes**.
+- Evaluar diferentes cantidades de cajas (`c = 1, 2, 3, ...`).
+- Estimar métricas clave como `ρ`, `L`, `Lq`, `W`, `Wq` y `P0`.
+- Reproducir visualmente el flujo de clientes y exportar resultados.
+
+> **Nota importante:** los parámetros iniciales son ejemplos didácticos. No provienen de un supermercado real y la recomendación final es técnica, no económica.
+
+---
+
+## 2. Tecnologías utilizadas
+
+El proyecto está construido con **Python** y las siguientes bibliotecas:
+
+| Tecnología | Uso |
+|---|---|
+| [Python](https://www.python.org/) | Lenguaje principal del proyecto. |
+| [SimPy](https://simpy.readthedocs.io/) | Simulación de eventos discretos (llegadas, colas y atención). |
+| [NumPy](https://numpy.org/) | Generación de números aleatorios y cálculos numéricos. |
+| [Pandas](https://pandas.pydata.org/) | Exportación de resultados a CSV. |
+| [Matplotlib](https://matplotlib.org/) | Gráficas de evolución de colas, esperas y utilización. |
+| [Tkinter](https://docs.python.org/3/library/tkinter.html) | Interfaz gráfica de escritorio. |
+
+### Patrones y principios aplicados
+
+- **MVC**: separación entre modelo, vista y controlador.
+- **Strategy**: políticas de fila intercambiables (`FilaUnica` / `FilasMultiples`).
+- **Clean Code y SOLID**: clases con responsabilidad única y componentes desacoplados.
+
+---
+
+## 3. Instalación
+
+### Requisitos previos
+
+- Python **3.10 o superior**.
+- Tkinter instalado (necesario para la interfaz gráfica).
+- Entorno virtual recomendado.
 
 ### Ubuntu / Debian
 
@@ -29,7 +60,6 @@ sudo apt install python3-venv python3-tk
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-python main.py
 ```
 
 ### Windows (PowerShell)
@@ -38,10 +68,9 @@ python main.py
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
-python main.py
 ```
 
-Si PowerShell impide la activación, usa CMD con `.venv\Scripts\activate.bat` o configura la política de ejecución de manera apropiada.
+> Si PowerShell bloquea la activación, usa CMD con `.venv\Scripts\activate.bat` o ajusta la política de ejecución de forma adecuada.
 
 ### macOS
 
@@ -49,132 +78,130 @@ Si PowerShell impide la activación, usa CMD con `.venv\Scripts\activate.bat` o 
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
+```
+
+Para salir del entorno virtual:
+
+```bash
+deactivate
+```
+
+---
+
+## 4. Configuración
+
+Antes de ejecutar una simulación, se configuran los siguientes parámetros:
+
+| Parámetro | Unidad | Descripción |
+|---|---|---|
+| `λ` (lambda) | clientes/minuto | Tasa global de llegadas a la zona de cajas. |
+| `μ` (mu) | clientes/minuto/caja | Tasa de atención de cada caja. |
+| `c` | cajas | Número de cajas abiertas. |
+| `T` | minutos | Duración del período de observación. |
+| Semilla | entero | Permite reproducir la misma secuencia aleatoria. |
+| Corridas | 1–20 | Repeticiones para promediar cada escenario. |
+| Máx. cajas | 1–20 | Límite superior para comparar configuraciones. |
+| Meta Wq | minutos | Límite deseado de espera en cola (criterio adicional). |
+
+### Condición de estabilidad
+
+El sistema alcanza estado estable en fila única únicamente si:
+
+```
+ρ = λ / (c · μ) < 1
+```
+
+Si `ρ ≥ 1`, el simulador permite observar el comportamiento en un horizonte finito, pero las métricas estacionarias se marcan como no aplicables.
+
+---
+
+## 5. Uso
+
+### Ejecutar la aplicación
+
+Con el entorno activado:
+
+```bash
 python main.py
 ```
 
-En macOS se necesita una instalación de Python que disponga de Tkinter y acceso a entorno gráfico.
+### Flujo de trabajo en la interfaz
 
-Para salir del entorno: `deactivate`.
+1. Selecciona un escenario didáctico o ingresa manualmente `λ`, `μ`, `c`, `T` y la semilla.
+2. Elige la organización de filas: `unica` o `multiples`.
+3. Presiona **Ejecutar simulación** para ver los resultados en el tablero.
+4. Usa **Comparar filas** para evaluar ambas estrategias con las mismas entradas aleatorias.
+5. Usa **Comparar n.º de cajas** para evaluar `c = 1` hasta el máximo configurado.
+6. Revisa la **Tabla comparativa**, las gráficas y la animación de eventos.
+7. Exporta los resultados con **Exportar CSV + PNG**; los archivos se guardan en `resultados/fecha_hora/`.
 
-## 3. Uso
-
-1. Selecciona un escenario didáctico o escribe λ, μ, c, horizonte T y semilla.
-2. Elige `unica` o `multiples` y presiona **Ejecutar simulación**.
-3. En **Tablero**, observa indicadores y reproduce los eventos de cada cliente.
-4. En **Gráficas**, revisa la evolución real de las colas, esperas y utilización.
-5. **Comparar filas** ejecuta las dos estrategias con **las mismas llegadas y tiempos de servicio por cliente** por cada semilla.
-6. **Comparar n.º de cajas** evalúa c = 1 hasta el máximo indicado, con las dos estrategias y con las repeticiones configuradas.
-7. Revisa la **Tabla comparativa** y la recomendación de cajas (solo para fila única).
-8. Pulsa **Exportar CSV + PNG** para escribir los datos y las imágenes bajo `resultados/fecha_hora/`.
-
-### Parámetros
-
-| Variable | Unidad | Significado |
-|---|---|---|
-| λ | clientes/minuto | Llegadas medias a la zona de cajas |
-| μ | clientes/minuto/caja | Capacidad media de cada caja |
-| c | cajas | Número de servidores abiertos |
-| T | minutos | Duración del período de observación |
-| Semilla | entero | Reproduce la serie de tiempos aleatorios |
-| Corridas | 1–20 | Repeticiones para promediar cada escenario |
-| Máx. cajas | 1–20 | Límite para comparar desde c = 1 |
-| Meta Wq | minutos | Límite deseado de espera teórica |
-
-**ρ = λ/(cμ).** La teoría estacionaria existe únicamente si ρ < 1. Para ρ ≥ 1, el simulador permite observar el horizonte finito, pero etiqueta las métricas estacionarias como no aplicables.
-
-## 4. Modelo y fórmulas
-
-La teoría implementada corresponde a **M/M/c con una cola compartida FIFO**, población y espacio de espera sin límite, tasas constantes y servidores de igual rapidez.
-
-Sea a = λ/μ y ρ = λ/(cμ):
-
-```
-P0 = 1 / [ sumatorio(n=0..c-1, a^n/n!) + a^c/(c! (1-rho)) ]
-P(espera) = P0 * a^c / (c! (1-rho))
-Lq = P(espera) * rho/(1-rho)
-Wq = Lq/lambda
-W = Wq + 1/mu
-L = lambda*W
-```
-
-La suma se evalúa por recurrencia para evitar cálculos innecesarios de potencias/factoriales grandes. Las fórmulas de fila única **no** se atribuyen como resultados teóricos de filas múltiples.
-
-### Estimaciones simuladas
-
-- **L** y **Lq** se calculan por áreas bajo las curvas de número de clientes y se dividen entre la duración del período medido.
-- **ρ** es la media de las fracciones de tiempo ocupadas de cada caja (integración temporal).
-- **W** y **Wq** corresponden a los clientes con llegada en el tramo medido, dejando que terminen sus servicios aunque su salida sea posterior a T.
-- Se descarta el **10 % inicial** del horizonte como calentamiento. Las áreas y utilizaciones se acumulan hasta T. Las salidas después de T no se contabilizan como `atendidos hasta T`.
-- `pendientes hasta T` = `llegados antes de T` – `atendidos antes de T`; incluye espera y servicio en progreso.
-- El porcentaje P(espera) simulado es la proporción de clientes medidos con espera positiva.
-- Una corrida finita, especialmente con congestión, puede diferir de los valores estacionarios; el criterio de muestra de W/Wq y la ventana temporal de L/Lq también difieren en su frontera final.
-
-## 5. Estructura MVC y patrón de diseño
-
-```text
-Simulador_Supermercado_MMc/
-├── main.py
-├── requirements.txt
-├── README.md
-├── .gitignore
-├── model/
-│   ├── teoria.py       # Fórmulas del modelo M/M/c
-│   ├── estrategias.py  # Strategy: FilaUnica / FilasMultiples
-│   ├── simulador.py    # Procesos SimPy, medición y eventos
-│   ├── comparador.py   # Experimentos, repeticiones y resultados
-│   └── exportador.py   # CSV con Pandas
-├── view/
-│   ├── ventana.py         # Controles y tablas
-│   ├── animacion_colas.py # Reproductor Canvas
-│   └── graficas.py        # Figuras Matplotlib
-├── controller/
-│   └── controlador.py    # Validación, hilos y comunicación
-├── tests/
-│   ├── test_teoria.py
-│   ├── test_simulador.py
-│   └── test_comparacion.py
-└── resultados/
-```
-
-**MVC:** el Modelo procesa la teoría y SimPy, la Vista muestra datos y el Controlador valida las entradas, llama al Modelo en un hilo separado y entrega resultados a la interfaz principal mediante `queue.Queue` + `after` de Tkinter.
-
-**Strategy:** las clases `FilaUnica` y `FilasMultiples` definen cómo llega y espera un cliente, a qué recurso solicita atención y cómo sale de su FIFO. El simulador utiliza la política elegida sin duplicar el resto de los procesos.
-
-**SOLID y Clean Code:** clases con funciones concretas, componentes desacoplados y sin capas abstractas decorativas; el código mantiene pocos comentarios para facilitar su defensa.
-
-## 6. Leer las gráficas
-
-- **Evolución de cola:** eje horizontal tiempo (min), vertical clientes esperando. Cada salto proviene de un cambio en SimPy.
-- **Esperas individuales:** cada punto corresponde a un cliente real, eje vertical minutos de espera.
-- **Teoría vs simulación:** compara cantidades L/Lq (personas), W/Wq (minutos) y ρ (proporción) en subgráficas independientes.
-- **Ocupación por caja:** porcentaje medido de cada cajero.
-- **Wq vs c:** efecto del número de cajas sobre la espera simulada bajo ambas políticas.
-- **Comparación fila única / múltiples:** Wq, Lq y ρ para la configuración de mayor c incluida en la comparación; no son teoría de múltiples.
-
-Al hacer clic sobre la evolución, el reproductor salta al último evento de ese instante. Al pulsar cerca de un cliente de la gráfica de espera, intenta localizar su inicio de atención.
-
-## 7. Ejecutar pruebas
-
-Desde la raíz del proyecto, con el entorno activado y `requirements.txt` instalado:
+### Ejecutar las pruebas
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-Prueban ecuaciones M/M/1 como caso c = 1, relaciones de Little, estado inestable, estabilidad, conservación de clientes, cronología de atención, no solapamiento de ocupación de cajas, FIFO, reproducibilidad, entradas iguales entre estrategias, comparación y CSV.
+El proyecto incluye 15 pruebas que verifican fórmulas teóricas, conservación de clientes, FIFO, reproducibilidad, comparaciones y exportación.
 
-**Validación de esta entrega:** consulta `docs/VALIDACION.md` para distinguir pruebas efectivamente ejecutadas y pruebas pendientes con SimPy oficial.
+---
 
-## 8. Alcance y limitaciones
+## 6. Estructura del proyecto
 
-- La fila independiente usa una regla fija de menor carga (espera + servicio) y un desempate por número de caja; no hay abandono, cambios de fila, cajas rápidas ni variación horaria.
-- Son tiempos Poisson/exponenciales con parámetros constantes; si hubiera observaciones reales, antes habría que evaluar estos supuestos.
-- Con gran congestión, el modelo de fila única M/M/c puede ser inestable y las métricas observadas durante T no son soluciones estacionarias.
-- Para visualizar muchas cajas o muchos clientes, la animación muestra solo los primeros diez de cada fila y conserva un contador exacto de los restantes.
-- La recomendación de mínimo c satisface un criterio teórico de estabilidad y Wq en el rango seleccionado; no considera costos laborales.
-- El entorno virtual debe instalarse en el equipo del usuario; **no se distribuye** en el ZIP.
+```text
+Simulador_Supermercado_MMc/
+├── main.py                    # Punto de entrada de la aplicación
+├── requirements.txt           # Dependencias del proyecto
+├── README.md                  # Este archivo
+├── CONTRIBUTING.md            # Guía de colaboración
+├── .gitignore                 # Archivos excluidos del control de versiones
+├── model/                     # Lógica del negocio y simulación
+│   ├── teoria.py              # Fórmulas del modelo M/M/c
+│   ├── estrategias.py         # Estrategias de fila (Strategy)
+│   ├── simulador.py           # Motor de eventos discretos con SimPy
+│   ├── comparador.py          # Experimentos, repeticiones y resúmenes
+│   └── exportador.py          # Exportación de resultados a CSV
+├── view/                      # Interfaz gráfica
+│   ├── ventana.py             # Ventana principal y controles
+│   ├── animacion_colas.py     # Reproductor de eventos en Canvas
+│   └── graficas.py            # Paneles de gráficas con Matplotlib
+├── controller/                # Coordinación entre modelo y vista
+│   └── controlador.py         # Validaciones, hilos y comunicación
+├── tests/                     # Pruebas automatizadas
+│   ├── test_teoria.py
+│   ├── test_simulador.py
+│   └── test_comparacion.py
+└── resultados/                # Carpeta de salida (no versionada)
+```
 
-## 9. Referencias suministradas (IEEE)
+| Carpeta | Responsabilidad |
+|---|---|
+| `model/` | Contiene toda la lógica de simulación, teoría de colas y exportación. |
+| `view/` | Maneja la interfaz Tkinter, gráficas y animación. |
+| `controller/` | Valida entradas, ejecuta el modelo en segundo plano y actualiza la vista. |
+| `tests/` | Pruebas unitarias e integración del simulador. |
+
+---
+
+## 7. Información adicional
+
+### Contribuciones
+
+El equipo trabaja con un flujo Git sencillo:
+
+- `main`: versión revisada para entregar.
+- `develop`: integración de avances del equipo.
+- `feature/<nombre>-<issue>-<descripción>`: rama personal de cada tarea.
+
+Para más detalles consulta [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+### Autores
+
+- **Doménica Rojas** — Interfaz, integración y documentación.
+- **Anderson Coello** — Modelo, estrategias de filas y métricas.
+- **Steven Jumbo** — Comparación de configuraciones, réplicas y exportación.
+- **Miguel Veintimilla** — Pruebas de integración, CI y documentación técnica.
+
+### Referencias
 
 [1] R. Morabito y F. C. R. de Lima, “A Markovian Queueing Model for the Analysis of User Waiting Times in Supermarket Checkouts,” *Gestão & Produção*, vol. 10, no. 2, pp. 165–177, 2004.
 
@@ -188,4 +215,6 @@ Prueban ecuaciones M/M/1 como caso c = 1, relaciones de Little, estado inestable
 
 [6] T. Antczak, R. Weron y J. Zabawa, “Data-Driven Simulation Modeling of the Checkout Process in Supermarkets: Insights for Decision Support in Retail Operations,” *IEEE Access*, vol. 8, pp. 228841–228852, 2020. doi: 10.1109/ACCESS.2020.3045919.
 
-Son los seis artículos adjuntos al trabajo. Sirven para el fundamento científico y la interpretación; el algoritmo escrito para este proyecto es propio y mantiene los supuestos explícitos de M/M/c y las políticas comparadas.
+### Licencia
+
+Proyecto académico. Uso exclusivo para fines educativos del curso de Simulación — UNL.

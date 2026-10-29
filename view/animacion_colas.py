@@ -1,6 +1,7 @@
 """Reproductor visual de las instantáneas reales de SimPy."""
 import tkinter as tk
 from tkinter import ttk
+from view.formato import truncar
 
 
 class AnimacionColas(tk.Frame):
@@ -12,6 +13,9 @@ class AnimacionColas(tk.Frame):
         self.cajas = 3
         self.organizacion = 'unica'
         self.reproduciendo = False
+        self.en_vivo = False
+        self.vivo_pausado = False
+        self.siguiendo_vivo = True
         self.temporizador = None
         self.velocidad = tk.StringVar(value='Normal')
         self.info = tk.StringVar(value='Ejecuta una simulación para ver los clientes.')
@@ -22,7 +26,8 @@ class AnimacionColas(tk.Frame):
         c = self.colores
         encabezado = tk.Frame(self, bg=c['panel'])
         encabezado.pack(fill='x', pady=(4, 7))
-        tk.Label(encabezado, text='FLUJO DE CLIENTES  ·  EVENTOS REALES', bg=c['panel'],
+        self.titulo = tk.StringVar(value='REPRODUCTOR DE CORRIDA TERMINADA')
+        tk.Label(encabezado, textvariable=self.titulo, bg=c['panel'],
                  fg=c['azul'], font=('DejaVu Sans', 10, 'bold')).pack(side='left')
         lienzo_contenedor = tk.Frame(self, bg=c['panel'])
         lienzo_contenedor.pack(fill='both', expand=True)
@@ -35,21 +40,25 @@ class AnimacionColas(tk.Frame):
         barra_y.pack(fill='x')
         self.canvas.configure(xscrollcommand=barra_y.set)
         barra = tk.Frame(self, bg=c['panel'])
-        barra.pack(fill='x', pady=6)
+        # Controles antes del lienzo: no se ocultan debajo de 20 cajas.
+        barra.pack(fill='x', pady=4, before=lienzo_contenedor)
         self.inicio_btn = ttk.Button(barra, text='↤ Inicio', command=self.reiniciar)
         self.inicio_btn.pack(side='left', padx=4)
         self.paso_btn = ttk.Button(barra, text='▶ Paso', command=self.paso)
         self.paso_btn.pack(side='left', padx=4)
         self.play_btn = ttk.Button(barra, text='▷ Reproducir', command=self.alternar)
         self.play_btn.pack(side='left', padx=4)
-        tk.Label(barra, text='Velocidad', bg=c['panel'], fg=c['suave']).pack(side='left', padx=(20, 5))
+        self.presente_btn = ttk.Button(barra,text='Ir al presente',command=self.seguir_vivo)
+        self.presente_btn.pack(side='left',padx=4)
+        self.presente_btn.configure(state='disabled')
+        tk.Label(barra, text='Velocidad de reproducción', bg=c['panel'], fg=c['suave']).pack(side='left', padx=(20, 5))
         ttk.Combobox(barra, textvariable=self.velocidad, values=('Lenta', 'Normal', 'Rápida'),
                      state='readonly', width=9).pack(side='left')
         self.barra = ttk.Scale(self, from_=0, to=1, orient='horizontal', command=self._navegar)
-        self.barra.pack(fill='x', pady=(0, 3))
+        self.barra.pack(fill='x', pady=(0, 3),before=lienzo_contenedor)
         self.barra.state(['disabled'])
         tk.Label(self, textvariable=self.info, bg=c['panel'], fg=c['verde'],
-                 font=('DejaVu Sans', 9), anchor='w').pack(fill='x')
+                 font=('DejaVu Sans', 9), anchor='w').pack(fill='x',before=lienzo_contenedor)
         self.canvas.bind('<Configure>', lambda _e: self._dibujar())
         self._habilitar(False)
 
@@ -60,6 +69,10 @@ class AnimacionColas(tk.Frame):
 
     def cargar(self, simulacion):
         self.pausar()
+        self.en_vivo = False
+        self.vivo_pausado = False
+        self.presente_btn.configure(state='disabled')
+        self.titulo.set('REPRODUCTOR DE CORRIDA TERMINADA')
         self.eventos = simulacion['eventos']
         self.indice = 0
         self.cajas = simulacion['c']
@@ -71,6 +84,11 @@ class AnimacionColas(tk.Frame):
 
     def limpiar(self):
         self.pausar()
+        self.en_vivo = False
+        self.vivo_pausado = False
+        self.siguiendo_vivo = True
+        self.presente_btn.configure(state='disabled')
+        self.titulo.set('REPRODUCTOR DE CORRIDA TERMINADA')
         self.eventos = []
         self.indice = 0
         self._habilitar(False)
@@ -87,14 +105,24 @@ class AnimacionColas(tk.Frame):
         self.play_btn.configure(text='▷ Reproducir')
 
     def reiniciar(self):
+        if self.en_vivo and not self.vivo_pausado:
+            return
         self.pausar()
+        if self.en_vivo:
+            self.siguiendo_vivo = False
         self._ir(0)
 
     def paso(self):
+        if self.en_vivo and not self.vivo_pausado:
+            return
         self.pausar()
+        if self.en_vivo:
+            self.siguiendo_vivo = False
         self._ir(self.indice + 1)
 
     def alternar(self):
+        if self.en_vivo:  # motor vivo se controla con los botones inferiores
+            return
         if self.reproduciendo:
             self.pausar()
         elif self.eventos:
@@ -111,14 +139,18 @@ class AnimacionColas(tk.Frame):
             self.pausar()
             return
         self._ir(self.indice + 1)
-        intervalo = {'Lenta': 500, 'Normal': 170, 'Rápida': 38}.get(self.velocidad.get(), 170)
+        intervalo = {'Lenta': 500, 'Normal': 200, 'Rápida': 50}.get(self.velocidad.get(), 170)
         self.temporizador = self.after(intervalo, self._reproducir)
 
     def _navegar(self, valor):
         if self.eventos:
             indice = max(0, min(len(self.eventos) - 1, int(float(valor))))
             if indice != self.indice:
+                if self.en_vivo and not self.vivo_pausado:
+                    return
                 self.pausar()
+                if self.en_vivo:
+                    self.siguiendo_vivo = False
                 self._ir(indice)
 
     def ir_a_tiempo(self, tiempo):
@@ -143,14 +175,14 @@ class AnimacionColas(tk.Frame):
         if self.eventos:
             self.barra.set(self.indice)
         self._dibujar()
-        if self.al_actualizar and self.eventos:
+        if self.al_actualizar and self.eventos and not self.en_vivo:
             self.al_actualizar(self.eventos[self.indice]['tiempo'])
 
     def _cliente(self, lienzo, x, y, numero, servido=False):
         c = self.colores
         color = c['verde'] if servido else c['azul']
         lienzo.create_oval(x-14, y-14, x+14, y+14, fill=color, outline='')
-        lienzo.create_text(x, y, text=str(numero), fill='#051322', font=('DejaVu Sans', 8, 'bold'))
+        lienzo.create_text(x, y, text=str(numero), fill=c['texto_inverso'], font=('DejaVu Sans', 8, 'bold'))
 
     def _caja(self, x, y, numero, cliente):
         c = self.colores
@@ -163,8 +195,16 @@ class AnimacionColas(tk.Frame):
                                 fill=c['verde'] if activa else c['suave'], font=('DejaVu Sans', 8))
 
     def _dibujar(self):
-        self.canvas.delete('all')
         c = self.colores
+        evento_actual = self.eventos[self.indice] if self.eventos else None
+        firma = (self.canvas.winfo_width(),self.canvas.winfo_height(),self.cajas,self.organizacion,
+                 repr((evento_actual['filas'],evento_actual['total_filas'],evento_actual['ocupados'])) if evento_actual else None)
+        if firma == getattr(self,'_ultima_firma',None):
+            if evento_actual:
+                self.info.set(f"t = {truncar(evento_actual['tiempo'])} min · {evento_actual['tipo']} · cliente {evento_actual['cliente'] or '—'} · esperando {evento_actual['cola_total']}")
+            return
+        self._ultima_firma = firma
+        self.canvas.delete('all')
         ancho = max(self.canvas.winfo_width(), 650)
         if not self.eventos:
             self.canvas.create_text(ancho / 2, 120, text='Sin eventos · Ejecuta una simulación',
@@ -172,7 +212,7 @@ class AnimacionColas(tk.Frame):
             self.info.set('Sin datos de simulación.')
             return
         evento = self.eventos[self.indice]
-        self.info.set(f"t = {evento['tiempo']:.2f} min   ·   {evento['tipo'].upper()}   ·   "
+        self.info.set(f"t = {truncar(evento['tiempo'])} min   ·   {evento['tipo'].upper()}   ·   "
                       f"Cliente: {evento['cliente'] or '—'}   ·   En espera: {evento['cola_total']}   ·   "
                       f"Finalizados: {evento['atendidos']}   ·   Evento {self.indice+1}/{len(self.eventos)}")
         ocupados = evento['ocupados']
@@ -210,3 +250,44 @@ class AnimacionColas(tk.Frame):
                     self.canvas.create_text(625, y+22, text=f'+{restantes}', fill=c['ambar'])
                 self.canvas.create_line(665, y, 745, y, fill=c['violeta'], arrow='last')
                 self._caja(810, y, i+1, cliente)
+
+    def iniciar_vivo(self, cajas, organizacion):
+        self.limpiar()
+        self.cajas = cajas
+        self.organizacion = organizacion
+        self.en_vivo = True
+        self.vivo_pausado = False
+        self.siguiendo_vivo = True
+        self.titulo.set('MOTOR PROGRESIVO · EVENTOS PROCESADOS')
+        self._dibujar()
+
+    def establecer_pausa_viva(self, pausado):
+        if not self.en_vivo:
+            return
+        self.vivo_pausado = pausado
+        disponible = bool(self.eventos) and pausado
+        self.inicio_btn['state'] = 'normal' if disponible else 'disabled'
+        self.paso_btn['state'] = 'normal' if disponible else 'disabled'
+        self.barra.state(['!disabled'] if disponible else ['disabled'])
+        self.play_btn['state'] = 'disabled'  # No reproduce información futura.
+        self.presente_btn['state'] = 'normal' if disponible else 'disabled'
+
+    def seguir_vivo(self):
+        if not self.en_vivo:
+            return
+        self.siguiendo_vivo = True
+        if self.eventos:
+            self._ir(len(self.eventos)-1)
+
+    def mostrar_vivo(self, evento):
+        if not self.en_vivo:
+            self.iniciar_vivo(self.cajas, self.organizacion)
+        # Conserva únicamente los eventos efectivamente entregados por SimPy.
+        estaba_al_final = self.siguiendo_vivo
+        self.eventos.append(evento)
+        self.barra.configure(to=max(1,len(self.eventos)-1))
+        if estaba_al_final:
+            self.indice = len(self.eventos)-1
+            self.barra.set(self.indice)
+            self._dibujar()
+        self.establecer_pausa_viva(self.vivo_pausado)
