@@ -1,6 +1,6 @@
 """Consultas paginadas del registro real; no se sintetizan eventos por milisegundo."""
 from statistics import mean
-import math
+import math 
 
 
 class HistorialCajeros:
